@@ -24,4 +24,4 @@ Render and validate the included example:
 make validate
 ```
 
-The generated service requires Docker's NVIDIA Container Toolkit and the official `main-cuda` whisper.cpp image. The transcription API accepts multipart audio at `POST /inference`; see the [upstream server documentation](https://github.com/ggml-org/whisper.cpp/tree/master/examples/server) for its request format.
+The generated service requires Docker's NVIDIA Container Toolkit and the official CUDA whisper.cpp image, pinned by digest for reproducible deployments. Renovate updates that digest as upstream publishes builds. The transcription API accepts multipart audio at `POST /inference`; see the [upstream server documentation](https://github.com/ggml-org/whisper.cpp/tree/master/examples/server) for its request format.

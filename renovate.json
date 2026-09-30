@@ -5,7 +5,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^src\\/Whispercpp\\.pkl$/"],
       "matchStrings": [
-        "image: String\\(!isEmpty\\) = \\\"(?<depName>[^:\\\"]+):(?<currentValue>[^\\\"]+)\\\""
+        "image: String\\(!isEmpty\\) = \\\"(?<depName>[^:\\\"]+):(?<currentValue>[^@\\\"]+)@(?<currentDigest>sha256:[^\\\"]+)\\\""
       ],
       "datasourceTemplate": "docker"
     }

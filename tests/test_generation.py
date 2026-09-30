@@ -21,7 +21,10 @@ class GenerationTest(unittest.TestCase):
             rendered = output.read_text()
 
         self.assertIn("whisper-server", rendered)
-        self.assertIn("ghcr.io/ggml-org/whisper.cpp:main-cuda", rendered)
+        self.assertIn(
+            "ghcr.io/ggml-org/whisper.cpp:main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a",
+            rendered,
+        )
         self.assertIn("/var/lib/whispercpp/models:/models:ro", rendered)
         self.assertIn("service_completed_successfully", rendered)
         self.assertIn("nvidia", rendered)
