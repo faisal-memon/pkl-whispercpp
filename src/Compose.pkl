@@ -5,6 +5,7 @@ import "Whispercpp.pkl"
 
 settings: Whispercpp = new Whispercpp {}
 
+local imageReference = "\(settings.imageRepository):\(settings.version)@\(settings.imageDigest)"
 local downloaderCommand =
   "if [ ! -s \"\(settings.modelPath)\" ]; then "
   + "./models/download-ggml-model.sh \"\(settings.model)\" \"\(settings.modelMountPath)\"; "
@@ -14,13 +15,13 @@ output {
   value = new Dynamic {
     services {
       model_init {
-        image = settings.image
+        image = imageReference
         restart = "no"
         command = new Listing { "sh"; "-c"; downloaderCommand }
         volumes = new Listing { "\(settings.modelDirectory):\(settings.modelMountPath)" }
       }
       [settings.containerName] = new Dynamic {
-        image = settings.image
+        image = imageReference
         command = new Listing {
           "whisper-server"
           "--host"; "0.0.0.0"

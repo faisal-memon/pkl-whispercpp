@@ -4,6 +4,8 @@ Typed Pkl module for rendering a CUDA-enabled [whisper.cpp](https://github.com/g
 
 It renders a one-shot model initializer and a local transcription service. The initializer downloads the selected GGML Whisper model into a persistent host directory; the service waits for it, mounts it read-only, and exposes `/inference` only on the configured host address.
 
+The image repository, upstream image tag, and immutable digest are separate settings. The official CUDA image uses the `main-cuda` channel; its registry does not publish matching Whisper.cpp release-version tags. Renovate updates the digest while the declared tag stays visible.
+
 ## Example
 
 ```pkl

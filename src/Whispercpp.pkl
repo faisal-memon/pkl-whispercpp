@@ -1,8 +1,10 @@
 /// Typed whisper.cpp service settings.
 open module whispercpp.Whispercpp
 
-/// Immutable official CUDA image. Renovate updates the digest as upstream publishes builds.
-image: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp:main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
+/// Official CUDA image. Renovate updates the digest as upstream publishes builds.
+imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
+version: String(!isEmpty) = "main-cuda"
+imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
 containerName: String(!isEmpty) = "whispercpp"
 restart: String(!isEmpty) = "unless-stopped"
 
