@@ -3,7 +3,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^src\\/Whispercpp\\.pkl$/"],
+      "managerFilePatterns": ["/^src\\/Compose\\.pkl$/"],
       "matchStrings": [
         "imageRepository: String\\(!isEmpty\\) = \\\"(?<depName>[^\\\"]+)\\\"\\s+version: String\\(!isEmpty\\) = \\\"(?<currentValue>[^\\\"]+)\\\"\\s+imageDigest: String\\(matches\\(Regex\\(\\\"[^\\\"]+\\\"\\)\\)\\) = \\\"(?<currentDigest>sha256:[^\\\"]+)\\\""
       ],

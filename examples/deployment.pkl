@@ -5,8 +5,9 @@ import "../src/Whispercpp.pkl"
 
 settings = new Whispercpp {
   model = "medium"
-  modelDirectory = "/var/lib/whispercpp/models"
   port = 8080
-  hostIp = "127.0.0.1"
   language = "en"
 }
+
+modelDirectory = "/var/lib/whispercpp/models"
+hostIp = "127.0.0.1"

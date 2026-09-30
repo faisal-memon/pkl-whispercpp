@@ -1,26 +1,10 @@
-/// Typed whisper.cpp service settings.
+/// Typed whisper.cpp server settings.
 open module whispercpp.Whispercpp
-
-/// Official CUDA image. Renovate updates the digest as upstream publishes builds.
-imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
-version: String(!isEmpty) = "main-cuda"
-imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
-containerName: String(!isEmpty) = "whispercpp"
-restart: String(!isEmpty) = "unless-stopped"
 
 /// Name used by whisper.cpp's official model downloader, for example `medium`.
 model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
-/// Host directory where the downloaded model is retained across restarts.
-modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
-/// Container path for cached models.
-modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
-
 port: Int(isBetween(1, 65535)) = 8080
-hostIp: String(!isEmpty) = "127.0.0.1"
 inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
 language: String(!isEmpty) = "en"
 convertAudio: Boolean = true
 flashAttention: Boolean = false
-
-local modelFilename: String = "ggml-\(model).bin"
-modelPath: String = "\(modelMountPath)/\(modelFilename)"
