@@ -1,0 +1,12 @@
+amends "pkl:Project"
+
+package {
+  name = "pkl-whispercpp"
+  license = "MIT"
+  version = read?("env:PKL_PACKAGE_VERSION") ?? "0.1.0"
+  baseUri = "package://github.com/faisal-memon/pkl-whispercpp/releases/download/v\(version)/pkl-whispercpp"
+  packageZipUrl = "https://github.com/faisal-memon/pkl-whispercpp/releases/download/v\(version)/pkl-whispercpp@\(version).zip"
+  sourceCode = "https://github.com/faisal-memon/pkl-whispercpp"
+  sourceCodeUrlScheme = "\(sourceCode)/blob/v\(version)%{path}#L%{line}"
+  exclude { "out/**"; "dist/**"; "Makefile" }
+}

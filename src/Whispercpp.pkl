@@ -1,0 +1,24 @@
+/// Typed whisper.cpp service settings.
+open module whispercpp.Whispercpp
+
+/// Container image with CUDA support for NVIDIA GPUs.
+image: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp:main-cuda"
+containerName: String(!isEmpty) = "whispercpp"
+restart: String(!isEmpty) = "unless-stopped"
+
+/// Name used by whisper.cpp's official model downloader, for example `medium`.
+model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+/// Host directory where the downloaded model is retained across restarts.
+modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
+/// Container path for cached models.
+modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
+
+port: Int(isBetween(1, 65535)) = 8080
+hostIp: String(!isEmpty) = "127.0.0.1"
+inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+language: String(!isEmpty) = "en"
+convertAudio: Boolean = true
+flashAttention: Boolean = false
+
+local modelFilename: String = "ggml-\(model).bin"
+modelPath: String = "\(modelMountPath)/\(modelFilename)"

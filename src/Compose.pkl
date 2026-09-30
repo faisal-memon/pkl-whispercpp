@@ -1,0 +1,51 @@
+/// Render a CUDA-enabled whisper.cpp service as Docker Compose.
+module whispercpp.Compose
+
+import "Whispercpp.pkl"
+
+settings: Whispercpp = new Whispercpp {}
+
+local downloaderCommand =
+  "if [ ! -s \"\(settings.modelPath)\" ]; then "
+  + "./models/download-ggml-model.sh \"\(settings.model)\" \"\(settings.modelMountPath)\"; "
+  + "fi"
+
+output {
+  value = new Dynamic {
+    services {
+      model_init {
+        image = settings.image
+        restart = "no"
+        command = new Listing { "sh"; "-c"; downloaderCommand }
+        volumes = new Listing { "\(settings.modelDirectory):\(settings.modelMountPath)" }
+      }
+      [settings.containerName] = new Dynamic {
+        image = settings.image
+        command = new Listing {
+          "whisper-server"
+          "--host"; "0.0.0.0"
+          "--port"; "\(settings.port)"
+          "--model"; settings.modelPath
+          "--language"; settings.language
+          "--inference-path"; settings.inferencePath
+          when (settings.convertAudio) { "--convert" }
+          when (settings.flashAttention) { "--flash-attn" }
+        }
+        restart = settings.restart
+        depends_on { model_init { condition = "service_completed_successfully" } }
+        ports = new Listing { "\(settings.hostIp):\(settings.port):\(settings.port)" }
+        volumes = new Listing { "\(settings.modelDirectory):\(settings.modelMountPath):ro" }
+        deploy {
+          resources {
+            reservations {
+              devices = new Listing {
+                new Dynamic { driver = "nvidia"; count = 1; capabilities = new Listing { "gpu" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  renderer = new YamlRenderer {}
+}

@@ -1,0 +1,12 @@
+/// Example whisper.cpp deployment for an NVIDIA GPU host.
+amends "../src/Compose.pkl"
+
+import "../src/Whispercpp.pkl"
+
+settings = new Whispercpp {
+  model = "medium"
+  modelDirectory = "/var/lib/whispercpp/models"
+  port = 8080
+  hostIp = "127.0.0.1"
+  language = "en"
+}
