@@ -3,8 +3,13 @@ open module whispercpp.Whispercpp
 
 /// Name used by whisper.cpp's official model downloader, for example `medium`.
 model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+/// Port where the whisper.cpp HTTP server listens inside its container.
 port: Int(isBetween(1, 65535)) = 8080
+/// HTTP path that accepts audio inference requests.
 inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+/// Language code used for transcription, such as `en` for English.
 language: String(!isEmpty) = "en"
+/// Enables conversion of uploaded audio formats through the server's converter.
 convertAudio: Boolean = true
+/// Enables whisper.cpp's flash-attention optimization when supported by the build.
 flashAttention: Boolean = false
