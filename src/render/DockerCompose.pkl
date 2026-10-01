@@ -1,0 +1,64 @@
+/// Render the Docker Compose settings as Docker Compose YAML.
+module whispercpp.ComposeRender
+
+import "../DockerCompose.pkl"
+
+config: DockerCompose = new DockerCompose {}
+
+local imageReference = "\(config.imageRepository):\(config.imageVersion)"
+local modelMountPath = "/models"
+local modelPath = "\(modelMountPath)/ggml-\(config.whispercpp.model).bin"
+local downloaderCommand =
+  "if [ ! -s \"\(modelPath)\" ]; then "
+  + "./models/download-ggml-model.sh \"\(config.whispercpp.model)\" \"\(modelMountPath)\"; "
+  + "fi"
+
+output {
+  value = new Dynamic {
+    services {
+      model_init {
+        image = imageReference
+        restart = "no"
+        command = new Listing { "sh"; "-c"; downloaderCommand }
+        volumes = new Listing { "\(config.hostModelDirectory):\(modelMountPath)" }
+      }
+      [config.containerName] = new Dynamic {
+        image = imageReference
+        command = new Listing {
+          "whisper-server"
+          "--host"; "0.0.0.0"
+          "--port"; "\(config.whispercpp.port)"
+          "--model"; modelPath
+          "--language"; config.whispercpp.language
+          "--inference-path"; config.whispercpp.inferencePath
+          when (config.whispercpp.convertAudio) { "--convert" }
+          when (config.whispercpp.flashAttention) { "--flash-attn" }
+        }
+        restart = config.restartPolicy
+        depends_on { model_init { condition = "service_completed_successfully" } }
+        ports = if (config.hostPublishing != null) new Listing { "\(config.hostPublishing.hostIp):\(config.hostPublishing.port):\(config.whispercpp.port)" } else null
+        networks = if (config.networks != null) (new Listing {
+          for (network in config.networks) { network.name }
+        }) else null
+        volumes = new Listing { "\(config.hostModelDirectory):\(modelMountPath):ro" }
+        deploy {
+          resources {
+            reservations {
+              devices = new Listing {
+                new Dynamic { driver = "nvidia"; count = config.gpuCount; capabilities = new Listing { "gpu" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    when (config.networks != null) {
+      networks {
+        for (network in config.networks) {
+          [network.name] = new Dynamic { ["external"] = network.`external` }
+        }
+      }
+    }
+  }
+  renderer = new YamlRenderer {}
+}

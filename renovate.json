@@ -3,9 +3,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^src\\/Compose\\.pkl$/"],
+      "managerFilePatterns": ["/^src\\/DockerCompose\\.pkl$/"],
       "matchStrings": [
-        "imageRepository: String\\(!isEmpty\\) = \\\"(?<depName>[^\\\"]+)\\\"\\s+version: String\\(!isEmpty\\) = \\\"(?<currentValue>[^\\\"]+)\\\"\\s+imageDigest: String\\(matches\\(Regex\\(\\\"[^\\\"]+\\\"\\)\\)\\) = \\\"(?<currentDigest>sha256:[^\\\"]+)\\\""
+        "imageRepository: String\\(!isEmpty\\) = \\\"(?<depName>[^\\\"]+)\\\"\\s+/// Docker image tag and immutable digest\\.\\s+imageVersion: String\\(!isEmpty\\) = \\\"(?<currentValue>[^\\\"]+)\\\""
       ],
       "datasourceTemplate": "docker"
     }
