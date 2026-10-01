@@ -19,6 +19,10 @@ modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
 /// Bind to loopback unless another service must reach transcription over the network.
 hostIp: String(!isEmpty) = "127.0.0.1"
+/// Publish the transcription port on the host. Disable this when callers use a shared Docker network.
+publishHostPort: Boolean = true
+/// Optional pre-existing Docker network for internal callers.
+externalNetworkName: String? = null
 gpuCount: Int(isBetween(1, 64)) = 1
 
 local imageReference = "\(imageRepository):\(version)@\(imageDigest)"
@@ -51,7 +55,8 @@ output {
         }
         restart = restartPolicy
         depends_on { model_init { condition = "service_completed_successfully" } }
-        ports = new Listing { "\(hostIp):\(settings.port):\(settings.port)" }
+        ports = if (publishHostPort) new Listing { "\(hostIp):\(settings.port):\(settings.port)" } else null
+        networks = if (externalNetworkName != null) new Listing { externalNetworkName } else null
         volumes = new Listing { "\(modelDirectory):\(modelMountPath):ro" }
         deploy {
           resources {
@@ -62,6 +67,11 @@ output {
             }
           }
         }
+      }
+    }
+    when (externalNetworkName != null) {
+      networks {
+        [externalNetworkName] = new Dynamic { ["external"] = true }
       }
     }
   }

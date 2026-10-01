@@ -2,7 +2,7 @@
 
 Typed Pkl module for rendering a CUDA-enabled [whisper.cpp](https://github.com/ggml-org/whisper.cpp) Docker Compose deployment.
 
-It renders a one-shot model initializer and a local transcription service. The initializer downloads the selected GGML Whisper model into a persistent host directory; the service waits for it, mounts it read-only, and exposes `/inference` only on the configured host address.
+It renders a one-shot model initializer and a transcription service. The initializer downloads the selected GGML Whisper model into a persistent host directory; the service waits for it, mounts it read-only, and can either publish `/inference` on the host or attach to a pre-existing external Docker network for internal callers.
 
 The image repository, upstream image tag, and immutable digest are separate settings. The official CUDA image uses the `main-cuda` channel; its registry does not publish matching Whisper.cpp release-version tags. Renovate updates the digest while the declared tag stays visible.
 
@@ -19,6 +19,11 @@ settings = new Whispercpp {
   hostIp = "127.0.0.1"
 }
 ```
+
+For an internal service, set `publishHostPort = false` and
+`externalNetworkName = "ai_net"`. The generated service then listens on its
+container port without competing for a host port, and other containers on the
+external network can reach it as `whispercpp:8080`.
 
 Render and validate the included example:
 
