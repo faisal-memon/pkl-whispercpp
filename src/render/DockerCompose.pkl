@@ -37,9 +37,9 @@ output {
         restart = config.restartPolicy
         depends_on { model_init { condition = "service_completed_successfully" } }
         ports = if (config.hostPublishing != null) new Listing { "\(config.hostPublishing.hostIp):\(config.hostPublishing.port):\(config.whispercpp.port)" } else null
-        networks = if (config.networks != null) new Listing {
+        networks = if (config.networks != null) (new Listing {
           for (network in config.networks) { network.name }
-        } else null
+        }) else null
         volumes = new Listing { "\(config.hostModelDirectory):\(modelMountPath):ro" }
         deploy {
           resources {
