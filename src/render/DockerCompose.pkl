@@ -1,4 +1,4 @@
-/// Render the Compose settings as Docker Compose YAML.
+/// Render the Docker Compose settings as Docker Compose YAML.
 module whispercpp.ComposeRender
 
 import "../DockerCompose.pkl"

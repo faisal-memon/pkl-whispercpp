@@ -9,7 +9,7 @@ The image repository and pinned version are separate settings. The version conta
 ## Example
 
 ```pkl
-amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/Compose.pkl"
+amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/DockerCompose.pkl"
 
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/Whispercpp.pkl"
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/DockerCompose.pkl"
