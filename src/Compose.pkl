@@ -10,7 +10,7 @@ settings: Whispercpp = new Whispercpp {}
 /// Renovate updates the official CUDA image digest as upstream publishes builds.
 imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
 version: String(!isEmpty) = "main-cuda"
-imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
+imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:f658228fa1e1ea6590ed7d5a4b640fca99b1d55969901c31eea7d629b269fbad"
 containerName: String(!isEmpty) = "whispercpp"
 restartPolicy: String(!isEmpty) = "unless-stopped"
 /// Host directory where the downloaded model is retained across restarts.
