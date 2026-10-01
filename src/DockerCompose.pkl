@@ -10,7 +10,7 @@ whispercpp: Whispercpp = new Whispercpp {}
 imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
 
 /// Docker image tag and immutable digest.
-version: String(!isEmpty) = "main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
+imageVersion: String(!isEmpty) = "main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
 
 /// Container name.
 containerName: String(!isEmpty) = "whispercpp"
