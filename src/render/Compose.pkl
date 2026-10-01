@@ -1,35 +1,15 @@
-/// Render a CUDA-enabled whisper.cpp service as Docker Compose.
-module whispercpp.Compose
+/// Render the Compose settings as Docker Compose YAML.
+module whispercpp.ComposeRender
 
-import "../Whispercpp.pkl"
+import "../Compose.pkl"
 
-/// Application settings passed to whisper.cpp itself.
-settings: Whispercpp = new Whispercpp {}
+config: Compose = new Compose {}
 
-/// Docker deployment settings.
-/// Renovate updates the official CUDA image digest as upstream publishes builds.
-imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
-version: String(!isEmpty) = "main-cuda"
-imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
-containerName: String(!isEmpty) = "whispercpp"
-restartPolicy: String(!isEmpty) = "unless-stopped"
-/// Host directory where the downloaded model is retained across restarts.
-modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
-/// Container path for the model cache.
-modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
-/// Bind to loopback unless another service must reach transcription over the network.
-hostIp: String(!isEmpty) = "127.0.0.1"
-/// Publish the transcription port on the host. Disable this when callers use a shared Docker network.
-publishHostPort: Boolean = true
-/// Optional pre-existing Docker network for internal callers.
-externalNetworkName: String? = null
-gpuCount: Int(isBetween(1, 64)) = 1
-
-local imageReference = "\(imageRepository):\(version)@\(imageDigest)"
-local modelPath = "\(modelMountPath)/ggml-\(settings.model).bin"
+local imageReference = "\(config.imageRepository):\(config.version)@\(config.imageDigest)"
+local modelPath = "\(config.modelMountPath)/ggml-\(config.settings.model).bin"
 local downloaderCommand =
   "if [ ! -s \"\(modelPath)\" ]; then "
-  + "./models/download-ggml-model.sh \"\(settings.model)\" \"\(modelMountPath)\"; "
+  + "./models/download-ggml-model.sh \"\(config.settings.model)\" \"\(config.modelMountPath)\"; "
   + "fi"
 
 output {
@@ -39,39 +19,39 @@ output {
         image = imageReference
         restart = "no"
         command = new Listing { "sh"; "-c"; downloaderCommand }
-        volumes = new Listing { "\(modelDirectory):\(modelMountPath)" }
+        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath)" }
       }
-      [containerName] = new Dynamic {
+      [config.containerName] = new Dynamic {
         image = imageReference
         command = new Listing {
           "whisper-server"
           "--host"; "0.0.0.0"
-          "--port"; "\(settings.port)"
+          "--port"; "\(config.settings.port)"
           "--model"; modelPath
-          "--language"; settings.language
-          "--inference-path"; settings.inferencePath
-          when (settings.convertAudio) { "--convert" }
-          when (settings.flashAttention) { "--flash-attn" }
+          "--language"; config.settings.language
+          "--inference-path"; config.settings.inferencePath
+          when (config.settings.convertAudio) { "--convert" }
+          when (config.settings.flashAttention) { "--flash-attn" }
         }
-        restart = restartPolicy
+        restart = config.restartPolicy
         depends_on { model_init { condition = "service_completed_successfully" } }
-        ports = if (publishHostPort) new Listing { "\(hostIp):\(settings.port):\(settings.port)" } else null
-        networks = if (externalNetworkName != null) new Listing { externalNetworkName } else null
-        volumes = new Listing { "\(modelDirectory):\(modelMountPath):ro" }
+        ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.settings.port):\(config.settings.port)" } else null
+        networks = if (config.externalNetworkName != null) new Listing { config.externalNetworkName } else null
+        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath):ro" }
         deploy {
           resources {
             reservations {
               devices = new Listing {
-                new Dynamic { driver = "nvidia"; count = gpuCount; capabilities = new Listing { "gpu" } }
+                new Dynamic { driver = "nvidia"; count = config.gpuCount; capabilities = new Listing { "gpu" } }
               }
             }
           }
         }
       }
     }
-    when (externalNetworkName != null) {
+    when (config.externalNetworkName != null) {
       networks {
-        [externalNetworkName] = new Dynamic { ["external"] = true }
+        [config.externalNetworkName] = new Dynamic { ["external"] = true }
       }
     }
   }
