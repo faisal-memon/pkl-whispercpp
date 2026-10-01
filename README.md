@@ -14,11 +14,13 @@ amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/Compo
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/Whispercpp.pkl"
 
 config {
-  settings = new Whispercpp {
-    model = "medium"
+  dockerCompose {
+    settings = new Whispercpp {
+      model = "medium"
+    }
+    modelDirectory = "/var/lib/whispercpp/models"
+    hostIp = "127.0.0.1"
   }
-  modelDirectory = "/var/lib/whispercpp/models"
-  hostIp = "127.0.0.1"
 }
 ```
 

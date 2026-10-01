@@ -1,26 +1,8 @@
-/// Render a CUDA-enabled whisper.cpp service as Docker Compose.
+/// Deployment configuration entry point for whisper.cpp.
 module whispercpp.Compose
 
 import "Whispercpp.pkl"
+import "DockerCompose.pkl"
 
-/// Application settings passed to whisper.cpp itself.
-settings: Whispercpp = new Whispercpp {}
-
-/// Docker deployment settings.
-/// Renovate updates the official CUDA image digest as upstream publishes builds.
-imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
-version: String(!isEmpty) = "main-cuda"
-imageDigest: String(matches(Regex("sha256:[a-f0-9]{64}"))) = "sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
-containerName: String(!isEmpty) = "whispercpp"
-restartPolicy: String(!isEmpty) = "unless-stopped"
-/// Host directory where the downloaded model is retained across restarts.
-modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
-/// Container path for the model cache.
-modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
-/// Bind to loopback unless another service must reach transcription over the network.
-hostIp: String(!isEmpty) = "127.0.0.1"
-/// Publish the transcription port on the host. Disable this when callers use a shared Docker network.
-publishHostPort: Boolean = true
-/// Optional pre-existing Docker network for internal callers.
-externalNetworkName: String? = null
-gpuCount: Int(isBetween(1, 64)) = 1
+/// Docker Compose deployment settings.
+dockerCompose: DockerCompose = new DockerCompose {}

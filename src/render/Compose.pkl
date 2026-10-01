@@ -5,11 +5,12 @@ import "../Compose.pkl"
 
 config: Compose = new Compose {}
 
-local imageReference = "\(config.imageRepository):\(config.version)@\(config.imageDigest)"
-local modelPath = "\(config.modelMountPath)/ggml-\(config.settings.model).bin"
+local dockerCompose = config.dockerCompose
+local imageReference = "\(dockerCompose.imageRepository):\(dockerCompose.version)@\(dockerCompose.imageDigest)"
+local modelPath = "\(dockerCompose.modelMountPath)/ggml-\(dockerCompose.settings.model).bin"
 local downloaderCommand =
   "if [ ! -s \"\(modelPath)\" ]; then "
-  + "./models/download-ggml-model.sh \"\(config.settings.model)\" \"\(config.modelMountPath)\"; "
+  + "./models/download-ggml-model.sh \"\(dockerCompose.settings.model)\" \"\(dockerCompose.modelMountPath)\"; "
   + "fi"
 
 output {
@@ -19,39 +20,39 @@ output {
         image = imageReference
         restart = "no"
         command = new Listing { "sh"; "-c"; downloaderCommand }
-        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath)" }
+        volumes = new Listing { "\(dockerCompose.modelDirectory):\(dockerCompose.modelMountPath)" }
       }
-      [config.containerName] = new Dynamic {
+      [dockerCompose.containerName] = new Dynamic {
         image = imageReference
         command = new Listing {
           "whisper-server"
           "--host"; "0.0.0.0"
-          "--port"; "\(config.settings.port)"
+          "--port"; "\(dockerCompose.settings.port)"
           "--model"; modelPath
-          "--language"; config.settings.language
-          "--inference-path"; config.settings.inferencePath
-          when (config.settings.convertAudio) { "--convert" }
-          when (config.settings.flashAttention) { "--flash-attn" }
+          "--language"; dockerCompose.settings.language
+          "--inference-path"; dockerCompose.settings.inferencePath
+          when (dockerCompose.settings.convertAudio) { "--convert" }
+          when (dockerCompose.settings.flashAttention) { "--flash-attn" }
         }
-        restart = config.restartPolicy
+        restart = dockerCompose.restartPolicy
         depends_on { model_init { condition = "service_completed_successfully" } }
-        ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.settings.port):\(config.settings.port)" } else null
-        networks = if (config.externalNetworkName != null) new Listing { config.externalNetworkName } else null
-        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath):ro" }
+        ports = if (dockerCompose.publishHostPort) new Listing { "\(dockerCompose.hostIp):\(dockerCompose.settings.port):\(dockerCompose.settings.port)" } else null
+        networks = if (dockerCompose.externalNetworkName != null) new Listing { dockerCompose.externalNetworkName } else null
+        volumes = new Listing { "\(dockerCompose.modelDirectory):\(dockerCompose.modelMountPath):ro" }
         deploy {
           resources {
             reservations {
               devices = new Listing {
-                new Dynamic { driver = "nvidia"; count = config.gpuCount; capabilities = new Listing { "gpu" } }
+                new Dynamic { driver = "nvidia"; count = dockerCompose.gpuCount; capabilities = new Listing { "gpu" } }
               }
             }
           }
         }
       }
     }
-    when (config.externalNetworkName != null) {
+    when (dockerCompose.externalNetworkName != null) {
       networks {
-        [config.externalNetworkName] = new Dynamic { ["external"] = true }
+        [dockerCompose.externalNetworkName] = new Dynamic { ["external"] = true }
       }
     }
   }
