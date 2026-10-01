@@ -4,7 +4,7 @@ module whispercpp.DockerCompose
 import "Whispercpp.pkl"
 
 /// Application settings passed to whisper.cpp itself.
-settings: Whispercpp = new Whispercpp {}
+whispercpp: Whispercpp = new Whispercpp {}
 
 /// Docker image repository.
 imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"

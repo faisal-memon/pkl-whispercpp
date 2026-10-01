@@ -6,10 +6,10 @@ import "../DockerCompose.pkl"
 config: DockerCompose = new DockerCompose {}
 
 local imageReference = "\(config.imageRepository):\(config.version)@\(config.imageDigest)"
-local modelPath = "\(config.modelMountPath)/ggml-\(config.settings.model).bin"
+local modelPath = "\(config.modelMountPath)/ggml-\(config.whispercpp.model).bin"
 local downloaderCommand =
   "if [ ! -s \"\(modelPath)\" ]; then "
-  + "./models/download-ggml-model.sh \"\(config.settings.model)\" \"\(config.modelMountPath)\"; "
+  + "./models/download-ggml-model.sh \"\(config.whispercpp.model)\" \"\(config.modelMountPath)\"; "
   + "fi"
 
 output {
@@ -26,16 +26,16 @@ output {
         command = new Listing {
           "whisper-server"
           "--host"; "0.0.0.0"
-          "--port"; "\(config.settings.port)"
+          "--port"; "\(config.whispercpp.port)"
           "--model"; modelPath
-          "--language"; config.settings.language
-          "--inference-path"; config.settings.inferencePath
-          when (config.settings.convertAudio) { "--convert" }
-          when (config.settings.flashAttention) { "--flash-attn" }
+          "--language"; config.whispercpp.language
+          "--inference-path"; config.whispercpp.inferencePath
+          when (config.whispercpp.convertAudio) { "--convert" }
+          when (config.whispercpp.flashAttention) { "--flash-attn" }
         }
         restart = config.restartPolicy
         depends_on { model_init { condition = "service_completed_successfully" } }
-        ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.settings.port):\(config.settings.port)" } else null
+        ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.whispercpp.port):\(config.whispercpp.port)" } else null
         networks = if (config.externalNetworkName != null) new Listing { config.externalNetworkName } else null
         volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath):ro" }
         deploy {

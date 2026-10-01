@@ -14,7 +14,7 @@ amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/Compo
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/Whispercpp.pkl"
 
 config {
-  settings = new Whispercpp {
+  whispercpp = new Whispercpp {
     model = "medium"
   }
   modelDirectory = "/var/lib/whispercpp/models"

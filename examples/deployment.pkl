@@ -4,7 +4,7 @@ amends "../src/render/Compose.pkl"
 import "../src/Whispercpp.pkl"
 
 config {
-  settings = new Whispercpp {
+  whispercpp = new Whispercpp {
     model = "medium"
     port = 8080
     language = "en"
