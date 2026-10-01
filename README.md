@@ -12,17 +12,19 @@ The image repository and pinned version are separate settings. The version conta
 amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/Compose.pkl"
 
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/Whispercpp.pkl"
+import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/DockerCompose.pkl"
+import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/HostPublishing.pkl"
 
 config {
   whispercpp = new Whispercpp {
     model = "medium"
   }
   hostModelDirectory = "/var/lib/whispercpp/models"
-  hostIp = "127.0.0.1"
+  hostPublishing = new HostPublishing {}
 }
 ```
 
-For an internal service, set `publishHostPort = false` and
+For an internal service, leave `hostPublishing` unset and
 `externalNetworkName = "ai_net"`. The generated service then listens on its
 container port without competing for a host port, and other containers on the
 external network can reach it as `whispercpp:8080`.

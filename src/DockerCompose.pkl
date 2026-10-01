@@ -2,6 +2,7 @@
 module whispercpp.DockerCompose
 
 import "Whispercpp.pkl"
+import "HostPublishing.pkl"
 
 /// Application settings passed to whisper.cpp itself.
 whispercpp: Whispercpp = new Whispercpp {}
@@ -21,11 +22,8 @@ restartPolicy: String(!isEmpty) = "unless-stopped"
 /// Host directory where the downloaded model is retained across restarts.
 hostModelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 
-/// Host address used when publishing the service port.
-hostIp: String(!isEmpty) = "127.0.0.1"
-
-/// Whether to publish the transcription port on the host.
-publishHostPort: Boolean = true
+/// Optional host-side publishing. Leave null to keep the service private to Docker networks.
+hostPublishing: HostPublishing? = null
 
 /// Optional pre-existing Docker network for internal callers.
 externalNetworkName: String? = null
