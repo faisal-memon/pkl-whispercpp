@@ -13,14 +13,13 @@ amends "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/src/render/Compo
 
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/Whispercpp.pkl"
 import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/DockerCompose.pkl"
-import "package://github.com/faisal-memon/pkl-whispercpp@0.1.0#/HostPublishing.pkl"
 
 config {
   whispercpp = new Whispercpp {
     model = "medium"
   }
   hostModelDirectory = "/var/lib/whispercpp/models"
-  hostPublishing = new HostPublishing {}
+  hostPublishing = new DockerCompose.HostPublishing {}
 }
 ```
 

@@ -2,7 +2,6 @@
 module whispercpp.DockerCompose
 
 import "Whispercpp.pkl"
-import "HostPublishing.pkl"
 
 /// Application settings passed to whisper.cpp itself.
 whispercpp: Whispercpp = new Whispercpp {}
@@ -30,3 +29,12 @@ externalNetworkName: String? = null
 
 /// Number of GPUs reserved for the container.
 gpuCount: Int(isBetween(1, 64)) = 1
+
+/// Optional host-side port publishing settings.
+class HostPublishing {
+  /// Host address to bind.
+  hostIp: String(!isEmpty) = "0.0.0.0"
+
+  /// Host port to publish.
+  port: Int(isBetween(1, 65535)) = 8080
+}

@@ -3,7 +3,6 @@ amends "../src/render/Compose.pkl"
 
 import "../src/Whispercpp.pkl"
 import "../src/DockerCompose.pkl"
-import "../src/HostPublishing.pkl"
 
 config {
   whispercpp = new Whispercpp {
@@ -12,5 +11,5 @@ config {
     language = "en"
   }
   hostModelDirectory = "/var/lib/whispercpp/models"
-  hostPublishing = new HostPublishing {}
+  hostPublishing = new DockerCompose.HostPublishing {}
 }
