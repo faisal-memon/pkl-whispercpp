@@ -5,7 +5,7 @@ import "../DockerCompose.pkl"
 
 config: DockerCompose = new DockerCompose {}
 
-local imageReference = "\(config.imageRepository):\(config.version)@\(config.imageDigest)"
+local imageReference = "\(config.imageRepository):\(config.version)"
 local modelMountPath = "/models"
 local modelPath = "\(modelMountPath)/ggml-\(config.whispercpp.model).bin"
 local downloaderCommand =
