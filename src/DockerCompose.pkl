@@ -24,8 +24,8 @@ hostModelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 /// Optional host-side publishing. Leave null to keep the service private to Docker networks.
 hostPublishing: HostPublishing? = null
 
-/// Optional pre-existing Docker network for internal callers.
-externalNetworkName: String? = null
+/// Optional pre-existing Docker networks for internal callers.
+networks: Listing<String>? = null
 
 /// Number of GPUs reserved for the container.
 gpuCount: Int(isBetween(1, 64)) = 1
