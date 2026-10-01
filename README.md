@@ -17,7 +17,7 @@ config {
   whispercpp = new Whispercpp {
     model = "medium"
   }
-  modelDirectory = "/var/lib/whispercpp/models"
+  hostModelDirectory = "/var/lib/whispercpp/models"
   hostIp = "127.0.0.1"
 }
 ```

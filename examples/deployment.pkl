@@ -9,6 +9,6 @@ config {
     port = 8080
     language = "en"
   }
-  modelDirectory = "/var/lib/whispercpp/models"
+  hostModelDirectory = "/var/lib/whispercpp/models"
   hostIp = "127.0.0.1"
 }

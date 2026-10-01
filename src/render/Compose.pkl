@@ -20,7 +20,7 @@ output {
         image = imageReference
         restart = "no"
         command = new Listing { "sh"; "-c"; downloaderCommand }
-        volumes = new Listing { "\(config.modelDirectory):\(modelMountPath)" }
+        volumes = new Listing { "\(config.hostModelDirectory):\(modelMountPath)" }
       }
       [config.containerName] = new Dynamic {
         image = imageReference
@@ -38,7 +38,7 @@ output {
         depends_on { model_init { condition = "service_completed_successfully" } }
         ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.whispercpp.port):\(config.whispercpp.port)" } else null
         networks = if (config.externalNetworkName != null) new Listing { config.externalNetworkName } else null
-        volumes = new Listing { "\(config.modelDirectory):\(modelMountPath):ro" }
+        volumes = new Listing { "\(config.hostModelDirectory):\(modelMountPath):ro" }
         deploy {
           resources {
             reservations {
