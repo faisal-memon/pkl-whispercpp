@@ -24,8 +24,8 @@ hostModelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 /// Optional host-side publishing. Leave null to keep the service private to Docker networks.
 hostPublishing: HostPublishing? = null
 
-/// Optional pre-existing Docker networks for internal callers.
-networks: Listing<String>? = null
+/// Optional Docker networks for the service.
+networks: Listing<Network>? = null
 
 /// Number of GPUs reserved for the container.
 gpuCount: Int(isBetween(1, 64)) = 1
@@ -37,4 +37,13 @@ class HostPublishing {
 
   /// Host port to publish.
   port: Int(isBetween(1, 65535)) = 8080
+}
+
+/// Docker network attachment settings.
+class Network {
+  /// Compose network name.
+  name: String(!isEmpty)
+
+  /// Whether Compose should use an already-existing network.
+  `external`: Boolean = false
 }

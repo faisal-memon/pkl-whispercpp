@@ -24,7 +24,7 @@ config {
 ```
 
 For an internal service, leave `hostPublishing` unset and
-set `networks = new Listing { "ai_net" }`. The generated service then listens on its
+set `networks = new Listing { new Network { name = "ai_net"; external = true } }`. The generated service then listens on its
 container port without competing for a host port, and other containers on the
 external network can reach it as `whispercpp:8080`.
 
