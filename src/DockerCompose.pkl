@@ -24,9 +24,6 @@ restartPolicy: String(!isEmpty) = "unless-stopped"
 /// Host directory where the downloaded model is retained across restarts.
 modelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 
-/// Container path for the model cache.
-modelMountPath: String(startsWith("/"), !contains("\n"), !contains("$")) = "/models"
-
 /// Host address used when publishing the service port.
 hostIp: String(!isEmpty) = "127.0.0.1"
 

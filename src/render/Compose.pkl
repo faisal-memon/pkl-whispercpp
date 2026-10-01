@@ -6,10 +6,11 @@ import "../DockerCompose.pkl"
 config: DockerCompose = new DockerCompose {}
 
 local imageReference = "\(config.imageRepository):\(config.version)@\(config.imageDigest)"
-local modelPath = "\(config.modelMountPath)/ggml-\(config.whispercpp.model).bin"
+local modelMountPath = "/models"
+local modelPath = "\(modelMountPath)/ggml-\(config.whispercpp.model).bin"
 local downloaderCommand =
   "if [ ! -s \"\(modelPath)\" ]; then "
-  + "./models/download-ggml-model.sh \"\(config.whispercpp.model)\" \"\(config.modelMountPath)\"; "
+  + "./models/download-ggml-model.sh \"\(config.whispercpp.model)\" \"\(modelMountPath)\"; "
   + "fi"
 
 output {
@@ -19,7 +20,7 @@ output {
         image = imageReference
         restart = "no"
         command = new Listing { "sh"; "-c"; downloaderCommand }
-        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath)" }
+        volumes = new Listing { "\(config.modelDirectory):\(modelMountPath)" }
       }
       [config.containerName] = new Dynamic {
         image = imageReference
@@ -37,7 +38,7 @@ output {
         depends_on { model_init { condition = "service_completed_successfully" } }
         ports = if (config.publishHostPort) new Listing { "\(config.hostIp):\(config.whispercpp.port):\(config.whispercpp.port)" } else null
         networks = if (config.externalNetworkName != null) new Listing { config.externalNetworkName } else null
-        volumes = new Listing { "\(config.modelDirectory):\(config.modelMountPath):ro" }
+        volumes = new Listing { "\(config.modelDirectory):\(modelMountPath):ro" }
         deploy {
           resources {
             reservations {
