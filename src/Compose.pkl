@@ -1,8 +1,0 @@
-/// Deployment configuration entry point for whisper.cpp.
-module whispercpp.Compose
-
-import "Whispercpp.pkl"
-import "DockerCompose.pkl"
-
-/// Docker Compose deployment settings.
-dockerCompose: DockerCompose = new DockerCompose {}

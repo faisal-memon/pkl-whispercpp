@@ -4,13 +4,11 @@ amends "../src/render/Compose.pkl"
 import "../src/Whispercpp.pkl"
 
 config {
-  dockerCompose {
-    settings = new Whispercpp {
-      model = "medium"
-      port = 8080
-      language = "en"
-    }
-    modelDirectory = "/var/lib/whispercpp/models"
-    hostIp = "127.0.0.1"
+  settings = new Whispercpp {
+    model = "medium"
+    port = 8080
+    language = "en"
   }
+  modelDirectory = "/var/lib/whispercpp/models"
+  hostIp = "127.0.0.1"
 }
