@@ -35,8 +35,8 @@ local imageReference = "\(imageRepository):\(imageVersion)"
 local modelMountPath = "/models"
 local modelPath = "\(modelMountPath)/ggml-\(whispercpp.model).bin"
 local downloaderCommand =
-  "if [ ! -s \\\"\(modelPath)\\\" ]; then "
-  + "./models/download-ggml-model.sh \\\"\(whispercpp.model)\\\" \\\"\(modelMountPath)\\\"; "
+  "if [ ! -s \"\(modelPath)\" ]; then "
+  + "./models/download-ggml-model.sh \"\(whispercpp.model)\" \"\(modelMountPath)\"; "
   + "fi"
 
 services = new Mapping {
