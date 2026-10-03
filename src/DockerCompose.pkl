@@ -55,7 +55,7 @@ services = new Mapping {
   ["model_init"] = new Service {
     image = imageReference
     restart = "no"
-    command = new Listing { "sh"; "-c"; downloaderCommand }
+    command = new Listing { downloaderCommand }
     volumes = new Listing { "\(hostModelDirectory):\(modelMountPath)" }
   }
   [containerName] = new Service {
