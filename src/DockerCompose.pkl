@@ -39,6 +39,18 @@ local downloaderCommand =
   + "./models/download-ggml-model.sh \"\(whispercpp.model)\" \"\(modelMountPath)\"; "
   + "fi"
 
+local convertFlag = if (whispercpp.convertAudio) " --convert" else ""
+local flashAttentionFlag = if (whispercpp.flashAttention) " --flash-attn" else ""
+local serverCommand =
+  "exec whisper-server --host 0.0.0.0 "
+  + "--port \"\(whispercpp.port)\" "
+  + "--model \"\(modelPath)\" "
+  + "--language \"\(whispercpp.language)\" "
+  + "--inference-path \"\(whispercpp.inferencePath)\""
+  + convertFlag
+  + flashAttentionFlag
+
+
 services = new Mapping {
   ["model_init"] = new Service {
     image = imageReference
@@ -48,16 +60,7 @@ services = new Mapping {
   }
   [containerName] = new Service {
     image = imageReference
-    command = new Listing {
-      "whisper-server"
-      "--host"; "0.0.0.0"
-      "--port"; "\(whispercpp.port)"
-      "--model"; modelPath
-      "--language"; whispercpp.language
-      "--inference-path"; whispercpp.inferencePath
-      when (whispercpp.convertAudio) { "--convert" }
-      when (whispercpp.flashAttention) { "--flash-attn" }
-    }
+    command = new Listing { serverCommand }
     restart = restartPolicy
     dependsOn = new Mapping {
       ["model_init"] = new Dependency { condition = "service_completed_successfully" }
