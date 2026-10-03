@@ -1,6 +1,7 @@
-/// Typed Docker Compose deployment settings for whisper.cpp.
+/// Whisper.cpp deployment settings built on the shared Docker Compose types.
 module whispercpp.DockerCompose
 
+extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3#/src/Compose.pkl"
 import "Whispercpp.pkl"
 
 /// Application settings passed to whisper.cpp itself.
@@ -25,10 +26,66 @@ hostModelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
 hostPublishing: HostPublishing? = null
 
 /// Optional Docker networks for the service.
-networks: Listing<Network>? = null
+networkSettings: Listing<NetworkSetting>? = null
 
 /// Number of GPUs reserved for the container.
 gpuCount: Int(isBetween(1, 64)) = 1
+
+local imageReference = "\(imageRepository):\(imageVersion)"
+local modelMountPath = "/models"
+local modelPath = "\(modelMountPath)/ggml-\(whispercpp.model).bin"
+local downloaderCommand =
+  "if [ ! -s \\\"\(modelPath)\\\" ]; then "
+  + "./models/download-ggml-model.sh \\\"\(whispercpp.model)\\\" \\\"\(modelMountPath)\\\"; "
+  + "fi"
+
+services = new Mapping {
+  ["model_init"] = new Service {
+    image = imageReference
+    restart = "no"
+    command = new Listing { "sh"; "-c"; downloaderCommand }
+    volumes = new Listing { "\(hostModelDirectory):\(modelMountPath)" }
+  }
+  [containerName] = new Service {
+    image = imageReference
+    command = new Listing {
+      "whisper-server"
+      "--host"; "0.0.0.0"
+      "--port"; "\(whispercpp.port)"
+      "--model"; modelPath
+      "--language"; whispercpp.language
+      "--inference-path"; whispercpp.inferencePath
+      when (whispercpp.convertAudio) { "--convert" }
+      when (whispercpp.flashAttention) { "--flash-attn" }
+    }
+    restart = restartPolicy
+    dependsOn = new Mapping {
+      ["model_init"] = new Dependency { condition = "service_completed_successfully" }
+    }
+    ports = if (hostPublishing != null) new Listing { "\(hostPublishing.hostIp):\(hostPublishing.port):\(whispercpp.port)" } else new {}
+    networks = if (networkSettings != null) new Listing { for (network in networkSettings) { network.name } } else new {}
+    volumes = new Listing { "\(hostModelDirectory):\(modelMountPath):ro" }
+    deploy = new Deploy {
+      resources = new Resources {
+        reservations = new Reservations {
+          devices = new Listing {
+            new Device {
+              driver = "nvidia"
+              count = "\(gpuCount)"
+              capabilities = new Listing { "gpu" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+networks = if (networkSettings != null) new Mapping {
+    for (network in networkSettings) {
+      [network.name] = new Network { `external` = network.`external` }
+    }
+  } else null
 
 /// Optional host-side port publishing settings.
 class HostPublishing {
@@ -40,7 +97,7 @@ class HostPublishing {
 }
 
 /// Docker network attachment settings.
-class Network {
+class NetworkSetting {
   /// Compose network name.
   name: String(!isEmpty)
 

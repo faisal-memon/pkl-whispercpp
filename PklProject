@@ -1,5 +1,11 @@
 amends "pkl:Project"
 
+dependencies {
+  ["docker"] {
+    uri = "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3"
+  }
+}
+
 package {
   name = "pkl-whispercpp"
   license = "MIT"
