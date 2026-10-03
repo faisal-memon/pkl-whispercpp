@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0": {
+      "type": "remote",
+      "uri": "projectpackage://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3",
+      "checksums": {
+        "sha256": "07237cf877961aa80fe2d15a60d2c25d6c38a7c4bd9192d36fa0f2c46c60a36a"
+      }
+    }
+  }
+}
