@@ -1,7 +1,9 @@
 /// Whisper.cpp deployment settings and Compose output.
-module config.Whispercpp
+module whispercpp.Whispercpp
 
 extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14#/src/Compose.pkl"
+
+// ── Application configuration ───────────────────────────────────────────────
 
 /// Application settings passed to whisper.cpp itself.
 config: Config = new Config {}
@@ -14,6 +16,8 @@ class Config {
   convertAudio: Boolean = true
   flashAttention: Boolean = false
 }
+
+// ── Docker configuration ────────────────────────────────────────────────────
 
 /// Docker image repository.
 imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
@@ -39,6 +43,8 @@ networkSettings: Listing<NetworkSetting>? = null
 /// Number of GPUs reserved for the container.
 gpuCount: Int(isBetween(1, 64)) = 1
 
+// ── Derived values ───────────────────────────────────────────────────────────
+
 local imageReference = "\(imageRepository):\(imageVersion)"
 local modelMountPath = "/models"
 local modelPath = "\(modelMountPath)/ggml-\(config.model).bin"
@@ -58,6 +64,8 @@ local serverCommand =
   + convertFlag
   + flashAttentionFlag
 
+
+// ── Compose services ────────────────────────────────────────────────────────
 
 services = new Mapping {
   ["model_init"] = new Service {
@@ -113,6 +121,8 @@ networks = if (networkSettings != null) new Mapping {
     }
   } else null
 
+// ── YAML output ─────────────────────────────────────────────────────────────
+
 output {
   value = new Dynamic {
     services = module.services
@@ -120,6 +130,8 @@ output {
   }
   renderer = new YamlRenderer {}
 }
+
+// ── Supporting types ────────────────────────────────────────────────────────
 
 /// Optional host-side port publishing settings.
 class HostPublishing {
