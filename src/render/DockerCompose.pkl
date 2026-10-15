@@ -1,7 +1,4 @@
 /// Render Whisper.cpp settings with the shared Docker Compose renderer.
 module whispercpp.DockerComposeRender
 
-amends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3#/src/ComposeRender.pkl"
-import "../DockerCompose.pkl"
-
-config = new DockerCompose {}
+amends "../DockerCompose.pkl"

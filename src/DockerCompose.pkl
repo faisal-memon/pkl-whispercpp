@@ -1,7 +1,7 @@
 /// Whisper.cpp deployment settings built on the shared Docker Compose types.
 module whispercpp.DockerCompose
 
-extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3#/src/Compose.pkl"
+extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14#/src/Compose.pkl"
 import "Whispercpp.pkl"
 
 /// Application settings passed to whisper.cpp itself.
@@ -20,7 +20,7 @@ containerName: String(!isEmpty) = "whispercpp"
 restartPolicy: String(!isEmpty) = "unless-stopped"
 
 /// Host directory where the downloaded model is retained across restarts.
-hostModelDirectory: String(startsWith("/"), !contains("\n"), !contains("$"))
+hostModelDirectory: String(!isEmpty, !contains("\n"), !contains("$"))
 
 /// Optional host-side publishing. Leave null to keep the service private to Docker networks.
 hostPublishing: HostPublishing? = null
@@ -55,19 +55,34 @@ services = new Mapping {
   ["model_init"] = new Service {
     image = imageReference
     restart = "no"
-    command = new Listing { downloaderCommand }
-    volumes = new Listing { "\(hostModelDirectory):\(modelMountPath)" }
+    command = new Listing { "sh"; "-c"; downloaderCommand }
+    volumes = new Listing {
+      new Volume { type = "bind"; source = hostModelDirectory; target = modelMountPath }
+    }
   }
   [containerName] = new Service {
     image = imageReference
     command = new Listing { serverCommand }
     restart = restartPolicy
-    dependsOn = new Mapping {
+    `depends_on` = new Mapping {
       ["model_init"] = new Dependency { condition = "service_completed_successfully" }
     }
-    ports = if (hostPublishing != null) new Listing { "\(hostPublishing.hostIp):\(hostPublishing.port):\(whispercpp.port)" } else new {}
+    ports = if (hostPublishing != null) new Listing {
+      new Port {
+        `host_ip` = hostPublishing.hostIp
+        published = hostPublishing.port
+        target = whispercpp.port
+      }
+    } else new {}
     networks = if (networkSettings != null) new Listing { for (network in networkSettings) { network.name } } else new {}
-    volumes = new Listing { "\(hostModelDirectory):\(modelMountPath):ro" }
+    volumes = new Listing {
+      new Volume {
+        type = "bind"
+        source = hostModelDirectory
+        target = modelMountPath
+        `read_only` = true
+      }
+    }
     deploy = new Deploy {
       resources = new Resources {
         reservations = new Reservations {

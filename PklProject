@@ -2,7 +2,7 @@ amends "pkl:Project"
 
 dependencies {
   ["docker"] {
-    uri = "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.3/pkl-docker@0.0.3"
+    uri = "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14"
   }
 }
 
