@@ -1,4 +1,4 @@
-/// Whisper.cpp deployment settings built on the shared Docker Compose types.
+/// Whisper.cpp deployment settings and Compose output.
 module whispercpp.DockerCompose
 
 extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14#/src/Compose.pkl"
@@ -104,6 +104,14 @@ networks = if (networkSettings != null) new Mapping {
       [network.name] = new Network { `external` = network.`external` }
     }
   } else null
+
+output {
+  value = new Dynamic {
+    services = module.services
+    networks = module.networks
+  }
+  renderer = new YamlRenderer {}
+}
 
 /// Optional host-side port publishing settings.
 class HostPublishing {
