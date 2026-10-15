@@ -1,20 +1,140 @@
-/// Typed whisper.cpp server settings.
-open module whispercpp.Whispercpp
+/// Whisper.cpp deployment settings and Compose output.
+module config.Whispercpp
 
-/// Name used by whisper.cpp's official model downloader, for example `medium`.
-model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+extends "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14#/src/Compose.pkl"
 
-/// Port where the whisper.cpp HTTP server listens inside its container.
-port: Int(isBetween(1, 65535)) = 8080
+/// Application settings passed to whisper.cpp itself.
+config: Config = new Config {}
 
-/// HTTP path that accepts audio inference requests.
-inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+class Config {
+  model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+  port: Int(isBetween(1, 65535)) = 8080
+  inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+  language: String(!isEmpty) = "en"
+  convertAudio: Boolean = true
+  flashAttention: Boolean = false
+}
 
-/// Language code used for transcription, such as `en` for English.
-language: String(!isEmpty) = "en"
+/// Docker image repository.
+imageRepository: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
 
-/// Enables conversion of uploaded audio formats through the server's converter.
-convertAudio: Boolean = true
+/// Docker image tag and immutable digest.
+imageVersion: String(!isEmpty) = "main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
 
-/// Enables whisper.cpp's flash-attention optimization when supported by the build.
-flashAttention: Boolean = false
+/// Container name.
+containerName: String(!isEmpty) = "whispercpp"
+
+/// Container restart policy.
+restartPolicy: String(!isEmpty) = "unless-stopped"
+
+/// Host directory where the downloaded model is retained across restarts.
+hostModelDirectory: String(!isEmpty, !contains("\n"), !contains("$"))
+
+/// Optional host-side publishing. Leave null to keep the service private to Docker networks.
+hostPublishing: HostPublishing? = null
+
+/// Optional Docker networks for the service.
+networkSettings: Listing<NetworkSetting>? = null
+
+/// Number of GPUs reserved for the container.
+gpuCount: Int(isBetween(1, 64)) = 1
+
+local imageReference = "\(imageRepository):\(imageVersion)"
+local modelMountPath = "/models"
+local modelPath = "\(modelMountPath)/ggml-\(config.model).bin"
+local downloaderCommand =
+  "if [ ! -s \"\(modelPath)\" ]; then "
+  + "./models/download-ggml-model.sh \"\(config.model)\" \"\(modelMountPath)\"; "
+  + "fi"
+
+local convertFlag = if (config.convertAudio) " --convert" else ""
+local flashAttentionFlag = if (config.flashAttention) " --flash-attn" else ""
+local serverCommand =
+  "exec whisper-server --host 0.0.0.0 "
+  + "--port \"\(config.port)\" "
+  + "--model \"\(modelPath)\" "
+  + "--language \"\(config.language)\" "
+  + "--inference-path \"\(config.inferencePath)\""
+  + convertFlag
+  + flashAttentionFlag
+
+
+services = new Mapping {
+  ["model_init"] = new Service {
+    image = imageReference
+    restart = "no"
+    command = new Listing { "sh"; "-c"; downloaderCommand }
+    volumes = new Listing {
+      new Volume { type = "bind"; source = hostModelDirectory; target = modelMountPath }
+    }
+  }
+  [containerName] = new Service {
+    image = imageReference
+    command = new Listing { serverCommand }
+    restart = restartPolicy
+    `depends_on` = new Mapping {
+      ["model_init"] = new Dependency { condition = "service_completed_successfully" }
+    }
+    ports = if (hostPublishing != null) new Listing {
+      new Port {
+        `host_ip` = hostPublishing.hostIp
+        published = hostPublishing.port
+        target = config.port
+      }
+    } else new {}
+    networks = if (networkSettings != null) new Listing { for (network in networkSettings) { network.name } } else new {}
+    volumes = new Listing {
+      new Volume {
+        type = "bind"
+        source = hostModelDirectory
+        target = modelMountPath
+        `read_only` = true
+      }
+    }
+    deploy = new Deploy {
+      resources = new Resources {
+        reservations = new Reservations {
+          devices = new Listing {
+            new Device {
+              driver = "nvidia"
+              count = "\(gpuCount)"
+              capabilities = new Listing { "gpu" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+networks = if (networkSettings != null) new Mapping {
+    for (network in networkSettings) {
+      [network.name] = new Network { `external` = network.`external` }
+    }
+  } else null
+
+output {
+  value = new Dynamic {
+    services = module.services
+    networks = module.networks
+  }
+  renderer = new YamlRenderer {}
+}
+
+/// Optional host-side port publishing settings.
+class HostPublishing {
+  /// Host address to bind.
+  hostIp: String(!isEmpty) = "0.0.0.0"
+
+  /// Host port to publish.
+  port: Int(isBetween(1, 65535)) = 8080
+}
+
+/// Docker network attachment settings.
+class NetworkSetting {
+  /// Compose network name.
+  name: String(!isEmpty)
+
+  /// Whether Compose should use an already-existing network.
+  `external`: Boolean = false
+}
