@@ -1,5 +1,5 @@
 /// Example whisper.cpp deployment for an NVIDIA GPU host.
-amends "../src/render/DockerCompose.pkl"
+amends "../src/DockerCompose.pkl"
 
 import "../src/Whispercpp.pkl"
 import "../src/DockerCompose.pkl"

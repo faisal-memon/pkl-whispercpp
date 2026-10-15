@@ -1,4 +1,0 @@
-/// Render Whisper.cpp settings with the shared Docker Compose renderer.
-module whispercpp.DockerComposeRender
-
-amends "../DockerCompose.pkl"
