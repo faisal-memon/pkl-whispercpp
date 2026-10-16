@@ -58,7 +58,7 @@ class DockerConfig {
   hostPublishing: HostPublishing? = new HostPublishing {}
 
   /// Docker networks used by the service and their settings.
-  networks: Mapping<String, Compose.Network> = new {}
+  networks: Mapping<String, NetworkConfig> = new {}
 
   /// Number of GPUs reserved for the container.
   gpuCount: Int(isBetween(1, 64)) = 1
@@ -67,6 +67,12 @@ class DockerConfig {
   restartPolicy: String(!isEmpty) = "unless-stopped"
 
   hidden imageReference = "\(image):\(imageTag)"
+}
+
+/// Consumer-facing network settings.
+class NetworkConfig {
+  /// Whether the network already exists outside this Compose project.
+  `external`: Boolean = false
 }
 
 /// Host-side port publishing settings.
@@ -97,7 +103,11 @@ local serverCommand =
   + convertFlag
   + flashAttentionFlag
 
-networks = config.docker.networks
+networks = new Mapping {
+  for (name, network in config.docker.networks) {
+    [name] = new Compose.Network { `external` = network.`external` }
+  }
+}
 
 services = new Mapping {
   ["model_init"] = new Compose.Service {
