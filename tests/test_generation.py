@@ -25,7 +25,9 @@ class GenerationTest(unittest.TestCase):
             "ghcr.io/ggml-org/whisper.cpp:main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a",
             rendered,
         )
-        self.assertIn("/var/lib/whispercpp/models:/models:ro", rendered)
+        self.assertIn("source: ./data/whispercpp/models", rendered)
+        self.assertIn("target: /models", rendered)
+        self.assertIn("read_only: true", rendered)
         self.assertIn("service_completed_successfully", rendered)
         self.assertIn("nvidia", rendered)
 

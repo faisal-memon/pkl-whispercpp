@@ -1,20 +1,161 @@
-/// Typed whisper.cpp server settings.
-open module whispercpp.Whispercpp
+/// A whisper.cpp transcription service rendered as Docker Compose YAML.
+module whispercpp.Whispercpp
 
-/// Name used by whisper.cpp's official model downloader, for example `medium`.
-model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+import "package://github.com/faisal-memon/pkl-docker/releases/download/v0.0.14/pkl-docker@0.0.14#/src/Compose.pkl"
 
-/// Port where the whisper.cpp HTTP server listens inside its container.
-port: Int(isBetween(1, 65535)) = 8080
+// ── Module configuration ─────────────────────────────────────────────────────
 
-/// HTTP path that accepts audio inference requests.
-inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+/// Whisper.cpp configuration supplied by the consumer.
+config: Config = new Config {}
 
-/// Language code used for transcription, such as `en` for English.
-language: String(!isEmpty) = "en"
+// ── Whisper.cpp configuration types ─────────────────────────────────────────
 
-/// Enables conversion of uploaded audio formats through the server's converter.
-convertAudio: Boolean = true
+/// Combined Whisper.cpp application and Docker settings.
+class Config {
+  /// Whisper.cpp application settings.
+  whispercpp: WhispercppConfig = new WhispercppConfig {}
 
-/// Enables whisper.cpp's flash-attention optimization when supported by the build.
-flashAttention: Boolean = false
+  /// Docker deployment settings.
+  docker: DockerConfig = new DockerConfig {}
+}
+
+/// Whisper.cpp application settings.
+class WhispercppConfig {
+  /// Name used by whisper.cpp's official model downloader.
+  model: String(matches(Regex("[a-z0-9._-]+"))) = "medium"
+
+  /// Port where the whisper.cpp HTTP server listens.
+  port: Int(isBetween(1, 65535)) = 8080
+
+  /// HTTP path that accepts audio inference requests.
+  inferencePath: String(startsWith("/"), !contains("\n")) = "/inference"
+
+  /// Language code used for transcription.
+  language: String(!isEmpty) = "en"
+
+  /// Enables conversion of uploaded audio formats.
+  convertAudio: Boolean = true
+
+  /// Enables flash-attention optimization when supported.
+  flashAttention: Boolean = false
+}
+
+/// Whisper.cpp Docker deployment settings.
+class DockerConfig {
+  /// Compose service name.
+  name: String(!isEmpty) = "whispercpp"
+
+  /// Docker image repository.
+  image: String(!isEmpty) = "ghcr.io/ggml-org/whisper.cpp"
+
+  /// Docker image tag and immutable digest.
+  imageTag: String(!isEmpty) = "main-cuda@sha256:8a9def3eea0615dbee85cac1e0fa3898dce214fe9bb7955635ba25667da3884a"
+
+  /// Host directory where the downloaded model is retained.
+  hostModelDirectory: String(!isEmpty, !contains("\n"), !contains("$")) = "./data/whispercpp/models"
+
+  /// Optional host-side publishing.
+  hostPublishing: HostPublishing? = new HostPublishing {}
+
+  /// Docker networks used by the service and their settings.
+  networks: Mapping<String, Compose.Network> = new {}
+
+  /// Number of GPUs reserved for the container.
+  gpuCount: Int(isBetween(1, 64)) = 1
+
+  /// Container restart policy.
+  restartPolicy: String(!isEmpty) = "unless-stopped"
+
+  hidden imageReference = "\(image):\(imageTag)"
+}
+
+/// Host-side port publishing settings.
+class HostPublishing {
+  /// Host address to bind.
+  hostIp: String(!isEmpty) = "0.0.0.0"
+
+  /// Host port to publish.
+  port: Int(isBetween(1, 65535)) = 8080
+}
+
+// ── Compose service ──────────────────────────────────────────────────────────
+
+local modelMountPath = "/models"
+local modelPath = "\(modelMountPath)/ggml-\(config.whispercpp.model).bin"
+local downloaderCommand =
+  "if [ ! -s \"\(modelPath)\" ]; then "
+  + "./models/download-ggml-model.sh \"\(config.whispercpp.model)\" \"\(modelMountPath)\"; "
+  + "fi"
+local convertFlag = if (config.whispercpp.convertAudio) " --convert" else ""
+local flashAttentionFlag = if (config.whispercpp.flashAttention) " --flash-attn" else ""
+local serverCommand =
+  "exec whisper-server --host 0.0.0.0 "
+  + "--port \"\(config.whispercpp.port)\" "
+  + "--model \"\(modelPath)\" "
+  + "--language \"\(config.whispercpp.language)\" "
+  + "--inference-path \"\(config.whispercpp.inferencePath)\""
+  + convertFlag
+  + flashAttentionFlag
+
+networks = config.docker.networks
+
+services = new Mapping {
+  ["model_init"] = new Compose.Service {
+    image = config.docker.imageReference
+    restart = "no"
+    command = new Listing { "sh"; "-c"; downloaderCommand }
+    volumes = new Listing {
+      new Compose.Volume { type = "bind"; source = config.docker.hostModelDirectory; target = modelMountPath }
+    }
+  }
+  [config.docker.name] = new Compose.Service {
+    image = config.docker.imageReference
+    command = new Listing { serverCommand }
+    restart = config.docker.restartPolicy
+    `depends_on` = new Mapping {
+      ["model_init"] = new Compose.Dependency { condition = "service_completed_successfully" }
+    }
+    ports = if (config.docker.hostPublishing != null) new Listing {
+      new Compose.Port {
+        host_ip = config.docker.hostPublishing.hostIp
+        published = config.docker.hostPublishing.port
+        target = config.whispercpp.port
+      }
+    } else new {}
+    volumes = new Listing {
+      new Compose.Volume {
+        type = "bind"
+        source = config.docker.hostModelDirectory
+        target = modelMountPath
+        `read_only` = true
+      }
+    }
+    networks = new Listing { for (network in config.docker.networks.keys) { network } }
+    deploy = new Compose.Deploy {
+      resources = new Compose.Resources {
+        reservations = new Compose.Reservations {
+          devices = new Listing {
+            new Compose.Device {
+              driver = "nvidia"
+              count = "\(config.docker.gpuCount)"
+              capabilities = new Listing { "gpu" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ── YAML output ──────────────────────────────────────────────────────────────
+
+// Whisper imports Compose for its typed service model, so Compose's output block
+// is not inherited. This output block renders Whisper's services and networks;
+// the renderer remains the shared implementation from pkl-docker.
+output {
+  value = new Dynamic {
+    services = module.services
+    networks = module.networks
+  }
+  renderer = new YamlRenderer {}
+}

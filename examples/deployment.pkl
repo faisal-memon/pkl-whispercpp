@@ -1,15 +1,13 @@
 /// Example whisper.cpp deployment for an NVIDIA GPU host.
-amends "../src/render/DockerCompose.pkl"
+amends "../src/Whispercpp.pkl"
 
-import "../src/Whispercpp.pkl"
-import "../src/DockerCompose.pkl"
-
-config {
-  whispercpp = new Whispercpp {
+config = new Config {
+  whispercpp {
     model = "medium"
     port = 8080
     language = "en"
   }
-  hostModelDirectory = "/var/lib/whispercpp/models"
-  hostPublishing = new DockerCompose.HostPublishing {}
+  docker {
+    hostModelDirectory = "./data/whispercpp/models"
+  }
 }
