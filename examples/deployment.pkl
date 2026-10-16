@@ -2,9 +2,12 @@
 amends "../src/Whispercpp.pkl"
 
 config = new Config {
-  model = "medium"
-  port = 8080
-  language = "en"
+  whispercpp {
+    model = "medium"
+    port = 8080
+    language = "en"
+  }
+  docker {
+    hostModelDirectory = "./data/whispercpp/models"
+  }
 }
-hostModelDirectory = "/var/lib/whispercpp/models"
-hostPublishing = new HostPublishing {}
